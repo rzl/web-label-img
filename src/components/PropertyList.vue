@@ -46,6 +46,8 @@
             color: getFontColor(annotation.backgroundColor), // 新增字体颜色计算
             width: '100%', boxSizing: 'border-box', maxWidth: '100%'
           }" v-model="annotation.name" placeholder="未命名" />
+          <!-- 新增删除按钮 -->
+          <button class="delete-button" @click.stop="deleteAnnotation(annotation.id)">删除</button>
         </li>
       </ul>
       <p v-else>没有标注</p>
@@ -72,6 +74,13 @@ export default {
       const b = parseInt(hex.slice(4, 6), 16);
       const brightness = (r * 299 + g * 587 + b * 114) / 1000; // 计算亮度
       return brightness > 128 ? '#000000' : '#FFFFFF'; // 亮度大于128返回黑色，否则返回白色
+    },
+    // 修改方法：直接操作当前的annotations
+    deleteAnnotation(annotationId) {
+      // 删除指定的注解
+      let annotations = this.annotations.filter(annotation => annotation.id !== annotationId);
+      // 通知父组件更新 annotations 数据
+      this.$emit('annotations-update', annotations);
     }
   }
 }
@@ -131,5 +140,23 @@ export default {
   padding: 5px;
   margin: 2px 0;
   border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 新增样式：删除按钮 */
+.delete-button {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.delete-button:hover {
+  background-color: #ff7875;
 }
 </style>
