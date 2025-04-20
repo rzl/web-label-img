@@ -9,3 +9,8 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 #### 虽然功能不是很完善，但是足够我替换labelImg
 
 ##### 也感谢项目中用到的相关库使得开发更简单
+
+[点击预览链接](https://rzl.github.io/web-label-img/dist/)
+
+![预览图片](https://rzl.github.io/web-label-img/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20250409221303.png)
+

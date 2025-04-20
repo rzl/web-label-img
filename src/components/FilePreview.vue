@@ -7,11 +7,11 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  selectedAnnotation: { // 新增 prop 接收选中的标注
+  selectedAnnotation: {
     type: Object,
     default: null
   },
-  annotations: { // 新增 prop 接收标注数组
+  annotations: {
     type: Array,
     default: () => []
   }
@@ -19,9 +19,9 @@ const props = defineProps({
 
 const fileContent = ref(null)
 const isImage = ref(false)
-const emit = defineEmits(['image-dimensions', 'annotations-update', 'update:selectedAnnotation']) // 新增 update:selectedAnnotation 事件
-const scale = ref(1) // 增加缩放比例变量
-
+const emit = defineEmits(['image-dimensions', 'annotations-update', 'update:selectedAnnotation'])
+const scale = ref(1)
+const isDeleteButtonVisible = ref(true) // 新增状态变量控制删除按钮的显示
 
 const getImageDimensions = (url) => {
   return new Promise((resolve) => {
@@ -81,7 +81,6 @@ const randomColor = () => {
   return `#${r}${g}${b}${a}`;
 };
 
-// 新增方法：创建一个新的标注框
 const createAnnotation = () => {
   const newAnnotation = {
     id: Date.now() + parseFloat(Math.random() * 999999),
@@ -95,9 +94,12 @@ const createAnnotation = () => {
   addAnnotation(newAnnotation);
 }
 
-// 修改 activated 事件处理函数
 const handleActivated = (annotation) => {
-  emit('update:selectedAnnotation', annotation); // 通过 emit 更新父组件的 selectedAnnotation
+  emit('update:selectedAnnotation', annotation);
+}
+
+const handleHideDeleteButton = () => {
+  isDeleteButtonVisible.value = !isDeleteButtonVisible.value // 切换删除按钮的显示状态
 }
 </script>
 
@@ -105,32 +107,34 @@ const handleActivated = (annotation) => {
   <div style="height: 100%; width: 100%; position: relative;">
     <div v-if="isImage" class="image-preview">
       <div class="annotation-controls">
-        <button @click="createAnnotation">增加标注</button>
-        <button @click="scale = parseFloat((scale - 0.1).toFixed(1))" :disabled="scale <= 0.1">-</button>
-        <input type="number" v-model="scale" step="0.1" min="0.1" max="5" placeholder="缩放比例" />
-        <button @click="scale = parseFloat((scale + 0.1).toFixed(1))" :disabled="scale >= 5">+</button>
+        <div class="annotation-controls left">
+          <button @click="createAnnotation">增加标注</button>
+          <button @click="scale = parseFloat((scale - 0.1).toFixed(1))" :disabled="scale <= 0.1">-</button>
+          <input type="number" v-model="scale" step="0.1" min="0.1" max="5" placeholder="缩放比例" />
+          <button @click="scale = parseFloat((scale + 0.1).toFixed(1))" :disabled="scale >= 5">+</button>
+        </div>
+        <div class="annotation-controls right">
+          <button @click="handleHideDeleteButton">{{ isDeleteButtonVisible ? '隐藏删除' : '显示删除' }} </button>
+        </div>
       </div>
       <div class="annotations-img">
         <div style="position: relative;">
           <img :src="fileContent" :style="{ transform: `scale(${scale})`, transformOrigin: 'top left' }"
             alt="File Preview" />
           <vue-draggable-resizable v-for="(annotation, index) in annotations" class="draggable-resizable"
-            :key="annotation.id"
-            :x="parseFloat(annotation.x * scale).toFixed(0)" 
-            :y="parseFloat(annotation.y * scale).toFixed(0)" 
-            :w="parseFloat(annotation.width * scale).toFixed(0)"
-            :h="parseFloat(annotation.height * scale).toFixed(0)" 
-            @dragging="( x, y ) => Object.assign(annotation, {x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0)}) " 
-            @resizing="( x, y, width, height ) => Object.assign(annotation, {x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0), width: parseFloat(width / scale).toFixed(0), height: parseFloat(height / scale).toFixed(0)})"
-            @activated="() => handleActivated(annotation)"
-            @deactivated="() => activeAnnotationIndex = null"
+            :key="annotation.id" :x="parseFloat(annotation.x * scale).toFixed(0)"
+            :y="parseFloat(annotation.y * scale).toFixed(0)" :w="parseFloat(annotation.width * scale).toFixed(0)"
+            :h="parseFloat(annotation.height * scale).toFixed(0)"
+            @dragging="(x, y) => Object.assign(annotation, { x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0) })"
+            @resizing="(x, y, width, height) => Object.assign(annotation, { x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0), width: parseFloat(width / scale).toFixed(0), height: parseFloat(height / scale).toFixed(0) })"
+            @activated="() => handleActivated(annotation)" @deactivated="() => activeAnnotationIndex = null"
             @dragstop="() => emit('annotations-update', annotations)"
-            @resizestop="() => emit('annotations-update', annotations)"
-            :style="{
-              border: `3px solid ${annotation.backgroundColor || '#ccc'}`,
-              backgroundColor: annotation === props.selectedAnnotation ? `${annotation.backgroundColor.slice(0, -2)}AA` : 'transparent'
+            @resizestop="() => emit('annotations-update', annotations)" :style="{
+              border: `3px solid ${annotation.backgroundColor || '#ccc'} `,
+              backgroundColor: annotation == props.selectedAnnotation ? `${annotation.backgroundColor.slice(0, -2)}AA` : 'transparent'
             }">
-            <button @click="removeAnnotation(index)">X</button>
+            <button v-if="isDeleteButtonVisible" class="delete-button" @click="removeAnnotation(index)">X</button>
+            <!-- 绑定删除按钮的显示状态 -->
           </vue-draggable-resizable>
         </div>
       </div>
@@ -148,14 +152,33 @@ const handleActivated = (annotation) => {
   display: flex;
   flex-direction: column;
   text-align: left;
-
 }
 
 .annotation-controls {
   display: flex;
+  justify-content: space-between;
+  /* 修改为左右布局 */
   align-items: center;
   background-color: #f0f0f0;
   border-bottom: 1px solid #ccc;
+  padding: 0 10px;
+  /* 添加内边距 */
+}
+
+.annotation-controls.left,
+.annotation-controls.right {
+  display: flex;
+  align-items: center;
+}
+
+.annotation-controls.left button {
+  margin-right: 5px;
+  /* 添加按钮之间的间距 */
+}
+
+.annotation-controls.right button {
+  margin-left: 5px;
+  /* 添加按钮之间的间距 */
 }
 
 .annotations-img {

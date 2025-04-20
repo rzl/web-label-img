@@ -240,7 +240,8 @@ async function saveAnnotationsToFile() {
       <div class="right-sidebar">
         <!-- 属性列表 -->
         <PropertyList :selectedAnnotation="selectedAnnotation" :annotations="annotations"
-          :selectAnnotation="selectAnnotation" @save-annotations="saveAnnotationsToFile" />
+          :selectAnnotation="selectAnnotation" @save-annotations="saveAnnotationsToFile"
+          @annotations-update="updateAnnotations" />
       </div>
     </main>
 
