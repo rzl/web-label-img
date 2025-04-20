@@ -28,7 +28,7 @@
           </div>
         </div>
         <div class="annotation-field">
-          <label class="annotation-label">背景颜色:</label>
+          <label class="annotation-label-100">背景颜色:</label>
           <input type="color" v-model="selectedAnnotation.backgroundColor" class="annotation-input" />
         </div>
       </div>
@@ -41,13 +41,11 @@
         <li v-for="annotation in annotations" :key="annotation.id"
           :style="{ backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA` }"
           @click="selectAnnotation(annotation)">
-          <input type="text"
-            :style="{ 
-              backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA`, 
-              color: getFontColor(annotation.backgroundColor), // 新增字体颜色计算
-              width: '100%', boxSizing: 'border-box', maxWidth: '100%' 
-            }"
-            v-model="annotation.name" placeholder="未命名" />
+          <input type="text" :style="{
+            backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA`,
+            color: getFontColor(annotation.backgroundColor), // 新增字体颜色计算
+            width: '100%', boxSizing: 'border-box', maxWidth: '100%'
+          }" v-model="annotation.name" placeholder="未命名" />
         </li>
       </ul>
       <p v-else>没有标注</p>
@@ -100,6 +98,13 @@ export default {
 }
 
 .annotation-label {
+  width: 60px;
+  text-align: right;
+  padding-right: 10px;
+  font-weight: bold;
+}
+
+.annotation-label-100 {
   width: 100px;
   text-align: right;
   padding-right: 10px;
