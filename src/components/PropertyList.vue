@@ -42,7 +42,11 @@
           :style="{ backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA` }"
           @click="selectAnnotation(annotation)">
           <input type="text"
-            :style="{ backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA`, width: '100%', boxSizing: 'border-box', maxWidth: '100%' }"
+            :style="{ 
+              backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA`, 
+              color: getFontColor(annotation.backgroundColor), // 新增字体颜色计算
+              width: '100%', boxSizing: 'border-box', maxWidth: '100%' 
+            }"
             v-model="annotation.name" placeholder="未命名" />
         </li>
       </ul>
@@ -61,6 +65,15 @@ export default {
   methods: {
     handleSaveAnnotations() {
       this.$emit('save-annotations');
+    },
+    // 新增方法：根据背景色计算字体颜色
+    getFontColor(backgroundColor) {
+      const hex = backgroundColor.replace('#', '');
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000; // 计算亮度
+      return brightness > 128 ? '#000000' : '#FFFFFF'; // 亮度大于128返回黑色，否则返回白色
     }
   }
 }
