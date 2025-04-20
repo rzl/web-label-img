@@ -27,6 +27,10 @@
             <input type="number" v-model="selectedAnnotation.height" class="annotation-input" />
           </div>
         </div>
+        <div class="annotation-field">
+          <label class="annotation-label">背景颜色:</label>
+          <input type="color" v-model="selectedAnnotation.backgroundColor" class="annotation-input" />
+        </div>
       </div>
     </div>
     <div>
@@ -79,10 +83,11 @@ export default {
 
 .annotation-field {
   display: flex;
+  margin-bottom: 10px;
 }
 
 .annotation-label {
-  width: 60px;
+  width: 100px;
   text-align: right;
   padding-right: 10px;
   font-weight: bold;
