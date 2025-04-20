@@ -29,7 +29,7 @@
         </div>
         <div class="annotation-field">
           <label class="annotation-label-100">背景颜色:</label>
-          <input type="color" v-model="selectedAnnotation.backgroundColor" class="annotation-input" />
+          <input type="color" v-model="backgroundColorWithoutAlpha" class="annotation-input" />
         </div>
       </div>
     </div>
@@ -62,24 +62,33 @@ export default {
     annotations: Array,
     selectAnnotation: Function
   },
+  computed: {
+    backgroundColorWithoutAlpha: {
+      get() {
+        return this.selectedAnnotation?.backgroundColor.slice(0, -2) || '#ffffff';
+      },
+      set(newValue) {
+        // 直接更新 selectedAnnotation.backgroundColor
+        if (this.selectedAnnotation) {
+          this.selectedAnnotation.backgroundColor = `${newValue}FF`;
+        }
+      }
+    }
+  },
   methods: {
     handleSaveAnnotations() {
       this.$emit('save-annotations');
     },
-    // 新增方法：根据背景色计算字体颜色
     getFontColor(backgroundColor) {
       const hex = backgroundColor.replace('#', '');
       const r = parseInt(hex.slice(0, 2), 16);
       const g = parseInt(hex.slice(2, 4), 16);
       const b = parseInt(hex.slice(4, 6), 16);
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000; // 计算亮度
-      return brightness > 128 ? '#000000' : '#FFFFFF'; // 亮度大于128返回黑色，否则返回白色
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 128 ? '#000000' : '#FFFFFF';
     },
-    // 修改方法：直接操作当前的annotations
     deleteAnnotation(annotationId) {
-      // 删除指定的注解
       let annotations = this.annotations.filter(annotation => annotation.id !== annotationId);
-      // 通知父组件更新 annotations 数据
       this.$emit('annotations-update', annotations);
     }
   }
