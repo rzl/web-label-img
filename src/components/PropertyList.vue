@@ -27,6 +27,10 @@
             <input type="number" v-model="selectedAnnotation.height" class="annotation-input" />
           </div>
         </div>
+        <div class="annotation-field">
+          <label class="annotation-label-100">背景颜色:</label>
+          <input type="color" v-model="backgroundColorWithoutAlpha" class="annotation-input" />
+        </div>
       </div>
     </div>
     <div>
@@ -37,9 +41,13 @@
         <li v-for="annotation in annotations" :key="annotation.id"
           :style="{ backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA` }"
           @click="selectAnnotation(annotation)">
-          <input type="text"
-            :style="{ backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA`, width: '100%', boxSizing: 'border-box', maxWidth: '100%' }"
-            v-model="annotation.name" placeholder="未命名" />
+          <input type="text" :style="{
+            backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA`,
+            color: getFontColor(annotation.backgroundColor), // 新增字体颜色计算
+            width: '100%', boxSizing: 'border-box', maxWidth: '100%'
+          }" v-model="annotation.name" placeholder="未命名" />
+          <!-- 新增删除按钮 -->
+          <button class="delete-button" @click.stop="deleteAnnotation(annotation.id)">删除</button>
         </li>
       </ul>
       <p v-else>没有标注</p>
@@ -54,9 +62,34 @@ export default {
     annotations: Array,
     selectAnnotation: Function
   },
+  computed: {
+    backgroundColorWithoutAlpha: {
+      get() {
+        return this.selectedAnnotation?.backgroundColor.slice(0, -2) || '#ffffff';
+      },
+      set(newValue) {
+        // 直接更新 selectedAnnotation.backgroundColor
+        if (this.selectedAnnotation) {
+          this.selectedAnnotation.backgroundColor = `${newValue}FF`;
+        }
+      }
+    }
+  },
   methods: {
     handleSaveAnnotations() {
       this.$emit('save-annotations');
+    },
+    getFontColor(backgroundColor) {
+      const hex = backgroundColor.replace('#', '');
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 128 ? '#000000' : '#FFFFFF';
+    },
+    deleteAnnotation(annotationId) {
+      let annotations = this.annotations.filter(annotation => annotation.id !== annotationId);
+      this.$emit('annotations-update', annotations);
     }
   }
 }
@@ -79,10 +112,18 @@ export default {
 
 .annotation-field {
   display: flex;
+  margin-bottom: 10px;
 }
 
 .annotation-label {
   width: 60px;
+  text-align: right;
+  padding-right: 10px;
+  font-weight: bold;
+}
+
+.annotation-label-100 {
+  width: 100px;
   text-align: right;
   padding-right: 10px;
   font-weight: bold;
@@ -108,5 +149,23 @@ export default {
   padding: 5px;
   margin: 2px 0;
   border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 新增样式：删除按钮 */
+.delete-button {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.delete-button:hover {
+  background-color: #ff7875;
 }
 </style>
