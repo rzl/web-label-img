@@ -114,12 +114,12 @@ const handleHideDeleteButton = () => {
           <button @click="scale = parseFloat((scale + 0.1).toFixed(1))" :disabled="scale >= 5">+</button>
         </div>
         <div class="annotation-controls right">
-          <button @click="handleHideDeleteButton">{{ isDeleteButtonVisible? '隐藏删除' : '显示删除'}} </button> <!-- 修改按钮点击事件 -->
+          <button @click="handleHideDeleteButton">{{ isDeleteButtonVisible ? '隐藏删除' : '显示删除' }} </button>
         </div>
       </div>
       <div class="annotations-img">
         <div style="position: relative;">
-          <img :src="fileContent" :style="{ transform: `scale(${ scale })`, transformOrigin: 'top left' }"
+          <img :src="fileContent" :style="{ transform: `scale(${scale})`, transformOrigin: 'top left' }"
             alt="File Preview" />
           <vue-draggable-resizable v-for="(annotation, index) in annotations" class="draggable-resizable"
             :key="annotation.id" :x="parseFloat(annotation.x * scale).toFixed(0)"
@@ -130,8 +130,8 @@ const handleHideDeleteButton = () => {
             @activated="() => handleActivated(annotation)" @deactivated="() => activeAnnotationIndex = null"
             @dragstop="() => emit('annotations-update', annotations)"
             @resizestop="() => emit('annotations-update', annotations)" :style="{
-              border: `3px solid ${ annotation.backgroundColor || '#ccc' } `,
-              backgroundColor: annotation === props.selectedAnnotation ? `${ annotation.backgroundColor.slice(0, -2) } AA` : 'transparent'
+              border: `3px solid ${annotation.backgroundColor || '#ccc'} `,
+              backgroundColor: annotation == props.selectedAnnotation ? `${annotation.backgroundColor.slice(0, -2)}AA` : 'transparent'
             }">
             <button v-if="isDeleteButtonVisible" class="delete-button" @click="removeAnnotation(index)">X</button>
             <!-- 绑定删除按钮的显示状态 -->
