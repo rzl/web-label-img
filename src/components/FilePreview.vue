@@ -119,9 +119,11 @@ const handleHideDeleteButton = () => {
       </div>
       <div class="annotations-img">
         <div style="position: relative;">
-          <img :src="fileContent" :style="{ transform: `scale(${scale})`, transformOrigin: 'top left' }"
+          <img :src="fileContent" :style="{ PointerEvents: 'none', transform: `scale(${scale})`, transformOrigin: 'top left' }"
             alt="File Preview" />
-          <vue-draggable-resizable v-for="(annotation, index) in annotations" class="draggable-resizable"
+          <vue-draggable-resizable v-for="(annotation, index) in annotations" 
+            :class="{'draggable-resizable':true, active: annotation == props.selectedAnnotation}"
+
             :key="annotation.id" :x="parseFloat(annotation.x * scale).toFixed(0)"
             :y="parseFloat(annotation.y * scale).toFixed(0)" :w="parseFloat(annotation.width * scale).toFixed(0)"
             :h="parseFloat(annotation.height * scale).toFixed(0)"
@@ -190,5 +192,8 @@ const handleHideDeleteButton = () => {
   position: absolute;
   top: 0px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.draggable-resizable.active {
+  z-index: 1!important;
 }
 </style>
