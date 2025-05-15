@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "vue": "^3.5.13",
-    "vue-draggable-resizable": "^3.0.0"
+    "vue-draggable-resizable": "^3.0.0",
+    "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
     "@vitejs/plugin-legacy": "^6.0.2",
