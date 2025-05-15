@@ -22,6 +22,7 @@ const isImage = ref(false)
 const emit = defineEmits(['image-dimensions', 'annotations-update', 'update:selectedAnnotation'])
 const scale = ref(1)
 const isDeleteButtonVisible = ref(true) // 新增状态变量控制删除按钮的显示
+const isAnnotationNameVisible = ref(true) // 新增状态变量控制标注名称的显示
 const lastClickPosition = ref({ x: 0, y: 0 }) // 新增状态变量记录点击位置
 
 const getImageDimensions = (url) => {
@@ -102,6 +103,9 @@ const handleActivated = (annotation) => {
 const handleHideDeleteButton = () => {
   isDeleteButtonVisible.value = !isDeleteButtonVisible.value // 切换删除按钮的显示状态
 }
+const handleHideAnnotationName = () => {
+  isAnnotationNameVisible.value = !isAnnotationNameVisible.value // 切换标注名称的显示状态
+}
 
 // 监听图片点击事件
 const handleImageClick = (event) => {
@@ -154,7 +158,12 @@ onUnmounted(() => {
           <button @click="scale = parseFloat((scale + 0.1).toFixed(1))" :disabled="scale >= 5">+</button>
         </div>
         <div class="annotation-controls right">
-          <button @click="handleHideDeleteButton">{{ isDeleteButtonVisible ? '隐藏删除' : '显示删除' }} </button>
+          <button @click="handleHideDeleteButton">
+            {{ isDeleteButtonVisible ? '隐藏删除' : '显示删除' }}
+          </button>
+          <button @click="handleHideAnnotationName">
+            {{ isAnnotationNameVisible ? '隐藏名称' : '显示名称' }}
+          </button>
         </div>
       </div>
       <div class="annotations-img">
@@ -186,6 +195,9 @@ onUnmounted(() => {
               backgroundColor: annotation == props.selectedAnnotation ? `${annotation.backgroundColor.slice(0, -2)}AA` : 'transparent'
             }">
             <button v-if="isDeleteButtonVisible" class="delete-button" @click="removeAnnotation(index)">X</button>
+            <span v-if="isAnnotationNameVisible" class="annotation-name" :style="{ color: '#fff', fontSize: '12px' }">
+              {{ annotation.name }}
+            </span>
           </vue-draggable-resizable>
         </div>
       </div>
