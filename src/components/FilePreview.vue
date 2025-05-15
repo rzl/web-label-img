@@ -60,7 +60,7 @@ const addAnnotation = (annotation) => {
 }
 
 const removeAnnotation = (index) => {
-  annotations.splice(index, 1)
+  props.annotations.splice(index, 1)
   emit('annotations-update', props.annotations)
 }
 
@@ -123,8 +123,8 @@ const handleKeyDown = (event) => {
 const createAnnotationAtPosition = (position) => {
   const newAnnotation = {
     id: Date.now() + parseFloat(Math.random() * 999999),
-    x: position.x,
-    y: position.y,
+    x: Number(position.x),
+    y: Number(position.y),
     width: 100,
     height: 100,
     name: '未命名',
@@ -171,10 +171,10 @@ onUnmounted(() => {
             v-for="(annotation, index) in annotations" 
             :class="{'draggable-resizable':true, active: annotation == props.selectedAnnotation}"
             :key="annotation.id" 
-            :x="parseFloat(annotation.x * scale).toFixed(0)"
-            :y="parseFloat(annotation.y * scale).toFixed(0)" 
-            :w="parseFloat(annotation.width * scale).toFixed(0)"
-            :h="parseFloat(annotation.height * scale).toFixed(0)"
+            :x="Number(parseFloat(annotation.x * scale).toFixed(0))"
+            :y="Number(parseFloat(annotation.y * scale).toFixed(0))" 
+            :w="Number(parseFloat(annotation.width * scale).toFixed(0))"
+            :h="Number(parseFloat(annotation.height * scale).toFixed(0))"
             @dragging="(x, y) => Object.assign(annotation, { x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0) })"
             @resizing="(x, y, width, height) => Object.assign(annotation, { x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0), width: parseFloat(width / scale).toFixed(0), height: parseFloat(height / scale).toFixed(0) })"
             @activated="() => handleActivated(annotation)" 
