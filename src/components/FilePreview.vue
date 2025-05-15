@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import VueDraggableResizable from 'vue-draggable-resizable'
 
 const props = defineProps({
@@ -22,6 +22,8 @@ const isImage = ref(false)
 const emit = defineEmits(['image-dimensions', 'annotations-update', 'update:selectedAnnotation'])
 const scale = ref(1)
 const isDeleteButtonVisible = ref(true) // 新增状态变量控制删除按钮的显示
+const isAnnotationNameVisible = ref(true) // 新增状态变量控制标注名称的显示
+const lastClickPosition = ref({ x: 0, y: 0 }) // 新增状态变量记录点击位置
 
 const getImageDimensions = (url) => {
   return new Promise((resolve) => {
@@ -59,7 +61,7 @@ const addAnnotation = (annotation) => {
 }
 
 const removeAnnotation = (index) => {
-  annotations.splice(index, 1)
+  props.annotations.splice(index, 1)
   emit('annotations-update', props.annotations)
 }
 
@@ -101,6 +103,48 @@ const handleActivated = (annotation) => {
 const handleHideDeleteButton = () => {
   isDeleteButtonVisible.value = !isDeleteButtonVisible.value // 切换删除按钮的显示状态
 }
+const handleHideAnnotationName = () => {
+  isAnnotationNameVisible.value = !isAnnotationNameVisible.value // 切换标注名称的显示状态
+}
+
+// 监听图片点击事件
+const handleImageClick = (event) => {
+  const rect = event.target.getBoundingClientRect()
+  lastClickPosition.value = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  }
+}
+
+// 监听键盘事件
+const handleKeyDown = (event) => {
+  if (event.key === 'a') {
+    createAnnotationAtPosition(lastClickPosition.value)
+  }
+}
+
+// 在指定位置创建标注框
+const createAnnotationAtPosition = (position) => {
+  const newAnnotation = {
+    id: Date.now() + parseFloat(Math.random() * 999999),
+    x: Number(position.x),
+    y: Number(position.y),
+    width: 100,
+    height: 100,
+    name: '未命名',
+    backgroundColor: randomColor()
+  }
+  addAnnotation(newAnnotation)
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
+
 </script>
 
 <template>
@@ -114,27 +158,46 @@ const handleHideDeleteButton = () => {
           <button @click="scale = parseFloat((scale + 0.1).toFixed(1))" :disabled="scale >= 5">+</button>
         </div>
         <div class="annotation-controls right">
-          <button @click="handleHideDeleteButton">{{ isDeleteButtonVisible ? '隐藏删除' : '显示删除' }} </button>
+          <button @click="handleHideDeleteButton">
+            {{ isDeleteButtonVisible ? '隐藏删除' : '显示删除' }}
+          </button>
+          <button @click="handleHideAnnotationName">
+            {{ isAnnotationNameVisible ? '隐藏名称' : '显示名称' }}
+          </button>
         </div>
       </div>
       <div class="annotations-img">
         <div style="position: relative;">
-          <img :src="fileContent" :style="{ transform: `scale(${scale})`, transformOrigin: 'top left' }"
-            alt="File Preview" />
-          <vue-draggable-resizable v-for="(annotation, index) in annotations" class="draggable-resizable"
-            :key="annotation.id" :x="parseFloat(annotation.x * scale).toFixed(0)"
-            :y="parseFloat(annotation.y * scale).toFixed(0)" :w="parseFloat(annotation.width * scale).toFixed(0)"
-            :h="parseFloat(annotation.height * scale).toFixed(0)"
+          <img 
+            :src="fileContent" 
+            :style="{ pointerEvents: 'auto', transform: `scale(${scale})`, transformOrigin: 'top left' }"
+            alt="File Preview" 
+            @click="handleImageClick"
+            draggable="false"
+            @dragstart.prevent
+          />
+          <vue-draggable-resizable 
+            v-for="(annotation, index) in annotations" 
+            :class="{'draggable-resizable':true, active: annotation == props.selectedAnnotation}"
+            :key="annotation.id" 
+            :x="Number(parseFloat(annotation.x * scale).toFixed(0))"
+            :y="Number(parseFloat(annotation.y * scale).toFixed(0))" 
+            :w="Number(parseFloat(annotation.width * scale).toFixed(0))"
+            :h="Number(parseFloat(annotation.height * scale).toFixed(0))"
             @dragging="(x, y) => Object.assign(annotation, { x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0) })"
             @resizing="(x, y, width, height) => Object.assign(annotation, { x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0), width: parseFloat(width / scale).toFixed(0), height: parseFloat(height / scale).toFixed(0) })"
-            @activated="() => handleActivated(annotation)" @deactivated="() => activeAnnotationIndex = null"
+            @activated="() => handleActivated(annotation)" 
+            @deactivated="() => activeAnnotationIndex = null"
             @dragstop="() => emit('annotations-update', annotations)"
-            @resizestop="() => emit('annotations-update', annotations)" :style="{
+            @resizestop="() => emit('annotations-update', annotations)" 
+            :style="{
               border: `3px solid ${annotation.backgroundColor || '#ccc'} `,
               backgroundColor: annotation == props.selectedAnnotation ? `${annotation.backgroundColor.slice(0, -2)}AA` : 'transparent'
             }">
             <button v-if="isDeleteButtonVisible" class="delete-button" @click="removeAnnotation(index)">X</button>
-            <!-- 绑定删除按钮的显示状态 -->
+            <span v-if="isAnnotationNameVisible" class="annotation-name" :style="{ color: '#fff', fontSize: '12px' }">
+              {{ annotation.name }}
+            </span>
           </vue-draggable-resizable>
         </div>
       </div>
@@ -190,5 +253,8 @@ const handleHideDeleteButton = () => {
   position: absolute;
   top: 0px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.draggable-resizable.active {
+  z-index: 1!important;
 }
 </style>

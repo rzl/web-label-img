@@ -43,10 +43,13 @@
           @click="selectAnnotation(annotation)">
           <input type="text" :style="{
             backgroundColor: annotation == selectedAnnotation ? annotation.backgroundColor : `${annotation.backgroundColor.slice(0, -2)}AA`,
-            color: getFontColor(annotation.backgroundColor), // 新增字体颜色计算
+            color: getFontColor(annotation.backgroundColor),
             width: '100%', boxSizing: 'border-box', maxWidth: '100%'
           }" v-model="annotation.name" placeholder="未命名" />
-          <!-- 新增删除按钮 -->
+          <!-- 新增拖动按钮 -->
+          <button class="drag-button" draggable="true" @dragstart="dragStart(annotation.id)" @drop="drop(annotation.id)" @dragover.prevent>
+            ↑↓
+          </button>
           <button class="delete-button" @click.stop="deleteAnnotation(annotation.id)">删除</button>
         </li>
       </ul>
@@ -61,6 +64,11 @@ export default {
     selectedAnnotation: Object,
     annotations: Array,
     selectAnnotation: Function
+  },
+  data() {
+    return {
+      draggingId: null // 新增拖动状态变量
+    };
   },
   computed: {
     backgroundColorWithoutAlpha: {
@@ -87,12 +95,28 @@ export default {
       const brightness = (r * 299 + g * 587 + b * 114) / 1000;
       return brightness > 128 ? '#000000' : '#FFFFFF';
     },
+    dragStart(id) {
+      this.draggingId = id; // 记录当前拖动的注解ID
+    },
+    drop(id) {
+      if (this.draggingId === null) return;
+      const fromIndex = this.annotations.findIndex(a => a.id === this.draggingId);
+      const toIndex = this.annotations.findIndex(a => a.id === id);
+      if (fromIndex !== toIndex) {
+        // 更新annotations数组顺序
+        const annotations = [...this.annotations];
+        const [movedAnnotation] = annotations.splice(fromIndex, 1);
+        annotations.splice(toIndex, 0, movedAnnotation);
+        this.$emit('annotations-update', annotations); // 触发更新事件
+      }
+      this.draggingId = null; // 重置拖动状态
+    },
     deleteAnnotation(annotationId) {
       let annotations = this.annotations.filter(annotation => annotation.id !== annotationId);
       this.$emit('annotations-update', annotations);
     }
   }
-}
+};
 </script>
 
 <style scoped>
@@ -152,6 +176,22 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* 新增样式：拖动按钮 */
+.drag-button {
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: move;
+  font-size: 12px;
+  margin-right: 5px;
+}
+
+.drag-button:hover {
+  background-color: #40a9ff;
 }
 
 /* 新增样式：删除按钮 */
