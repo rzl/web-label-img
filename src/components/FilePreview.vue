@@ -24,7 +24,8 @@ const scale = ref(1)
 const isDeleteButtonVisible = ref(true)
 const isAnnotationNameVisible = ref(true)
 const lastClickPosition = ref({ x: 0, y: 0 })
-const activeAnnotation = ref(null) // 新增：记录当前选中的标注框
+const activeAnnotation = ref(null)
+const isReverse = ref(false)
 
 const getImageDimensions = (url) => {
   return new Promise((resolve) => {
@@ -99,14 +100,14 @@ const createAnnotation = () => {
 
 const handleActivated = (annotation) => {
   emit('update:selectedAnnotation', annotation)
-  activeAnnotation.value = annotation // 更新当前选中的标注框
+  activeAnnotation.value = annotation
 }
 
 const handleHideDeleteButton = () => {
-  isDeleteButtonVisible.value = !isDeleteButtonVisible.value // 切换删除按钮的显示状态
+  isDeleteButtonVisible.value = !isDeleteButtonVisible.value
 }
 const handleHideAnnotationName = () => {
-  isAnnotationNameVisible.value = !isAnnotationNameVisible.value // 切换标注名称的显示状态
+  isAnnotationNameVisible.value = !isAnnotationNameVisible.value
 }
 
 // 监听图片点击事件
@@ -118,29 +119,70 @@ const handleImageClick = (event) => {
   }
 }
 
-// 修改：处理键盘事件，支持上下左右键移动选中的标注框
+// 处理键盘事件，支持上下左右键移动选中的标注框
 const handleKeyDown = (event) => {
   event.preventDefault()
   event.stopPropagation()
   if (activeAnnotation.value) {
     const step = 1 // 移动步长
+    let dx = 0, dy = 0, dw = 0, dh = 0
     switch (event.key) {
-      case 'ArrowUp':
-        activeAnnotation.value.y = Math.max(0, activeAnnotation.value.y - step)
+      case 'ArrowUp': // 上键
+        dy = -step
         break
-      case 'ArrowDown':
-        activeAnnotation.value.y += step
+      case 'ArrowDown': // 下键
+        dy = step
         break
-      case 'ArrowLeft':
-        activeAnnotation.value.x = Math.max(0, activeAnnotation.value.x - step)
+      case 'ArrowLeft': // 左键
+        dx = -step
         break
-      case 'ArrowRight':
-        activeAnnotation.value.x += step
+      case 'ArrowRight': // 右键
+        dx = step
         break
+      case '8':
+        // 上边向上平移
+        dy = -step
+        dh = step
+        break
+      case '2':
+        // 下边向下平移
+        dh = step
+        break
+      case '4':
+        // 左边向左平移，上下边变长
+        dx = -step
+        dw = step
+        dh = step
+        break
+      case '6':
+        // 右边向右平移
+        dw = step
+        break
+      case '5':
+        isReverse.value = !isReverse.value
+        return
       default:
         return
     }
-    emit('annotations-update', props.annotations) // 更新标注框位置
+    if (isReverse.value) {
+      dx = -dx
+      dy = -dy
+      dw = -dw
+      dh = -dh
+    }
+    // 更新标注框的位置和尺寸
+    activeAnnotation.value.x = Math.max(0, parseInt(activeAnnotation.value.x) + dx)
+    activeAnnotation.value.y = Math.max(0, parseInt(activeAnnotation.value.y) + dy)
+    activeAnnotation.value.width = Math.max(10, parseInt(activeAnnotation.value.width) + dw)
+    activeAnnotation.value.height = Math.max(10, parseInt(activeAnnotation.value.height) + dh)
+    emit('annotations-update', props.annotations) // 更新标注框位置和尺寸
+  }
+}
+
+// 新增：处理键盘释放事件，用于支持数字键5的长按操作
+const handleKeyUp = (event) => {
+  if (event.key === '5') {
+    isReverse.value = false // 取消反向操作状态
   }
 }
 
@@ -160,10 +202,12 @@ const createAnnotationAtPosition = (position) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keyup', handleKeyUp) // 添加 keyup 事件监听
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('keyup', handleKeyUp) // 移除 keyup 事件监听
 })
 
 </script>
@@ -241,12 +285,10 @@ onUnmounted(() => {
 .annotation-controls {
   display: flex;
   justify-content: space-between;
-  /* 修改为左右布局 */
   align-items: center;
   background-color: #f0f0f0;
   border-bottom: 1px solid #ccc;
   padding: 0 10px;
-  /* 添加内边距 */
 }
 
 .annotation-controls.left,
@@ -257,12 +299,10 @@ onUnmounted(() => {
 
 .annotation-controls.left button {
   margin-right: 5px;
-  /* 添加按钮之间的间距 */
 }
 
 .annotation-controls.right button {
   margin-left: 5px;
-  /* 添加按钮之间的间距 */
 }
 
 .annotations-img {
