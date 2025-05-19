@@ -152,11 +152,34 @@ const handleKeyDown = (event) => {
         // 左边向左平移，上下边变长
         dx = -step
         dw = step
-        dh = step
         break
       case '6':
         // 右边向右平移
         dw = step
+        break
+      case '7':
+        // 左上角向左上移动
+        dx = -step
+        dy = -step
+        dw = step
+        dh = step
+        break
+      case '9':
+        // 右上角向右上移动
+        dy = -step
+        dw = step
+        dh = step
+        break
+      case '1':
+        // 左下角向左下移动
+        dx = -step
+        dw = step
+        dh = step
+        break
+      case '3':
+        // 右下角向右下移动
+        dw = step
+        dh = step
         break
       case '5':
         isReverse.value = !isReverse.value
