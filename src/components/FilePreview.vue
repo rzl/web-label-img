@@ -123,6 +123,9 @@ const handleImageClick = (event) => {
 const handleKeyDown = (event) => {
   event.preventDefault()
   event.stopPropagation()
+  if (event.key === 'a') {
+    createAnnotationAtPosition(lastClickPosition.value)
+  }
   if (activeAnnotation.value) {
     const step = 1 // 移动步长
     let dx = 0, dy = 0, dw = 0, dh = 0
@@ -211,10 +214,14 @@ const handleKeyUp = (event) => {
 
 // 在指定位置创建标注框
 const createAnnotationAtPosition = (position) => {
+  let x = Number(position.x) - 50
+  let y = Number(position.y) - 50
+  if (x < 0) x = 0
+  if (y < 0) y = 0
   const newAnnotation = {
     id: Date.now() + parseFloat(Math.random() * 999999),
-    x: Number(position.x),
-    y: Number(position.y),
+    x,
+    y,
     width: 100,
     height: 100,
     name: '未命名',
@@ -261,6 +268,7 @@ onUnmounted(() => {
             :style="{ pointerEvents: 'auto', transform: `scale(${scale})`, transformOrigin: 'top left' }"
             alt="File Preview" 
             @click="handleImageClick"
+            @mousemove="handleImageClick"
             draggable="false"
             @dragstart.prevent
           />
