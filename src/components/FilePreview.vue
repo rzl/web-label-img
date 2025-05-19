@@ -21,9 +21,10 @@ const fileContent = ref(null)
 const isImage = ref(false)
 const emit = defineEmits(['image-dimensions', 'annotations-update', 'update:selectedAnnotation'])
 const scale = ref(1)
-const isDeleteButtonVisible = ref(true) // 新增状态变量控制删除按钮的显示
-const isAnnotationNameVisible = ref(true) // 新增状态变量控制标注名称的显示
-const lastClickPosition = ref({ x: 0, y: 0 }) // 新增状态变量记录点击位置
+const isDeleteButtonVisible = ref(true)
+const isAnnotationNameVisible = ref(true)
+const lastClickPosition = ref({ x: 0, y: 0 })
+const activeAnnotation = ref(null) // 新增：记录当前选中的标注框
 
 const getImageDimensions = (url) => {
   return new Promise((resolve) => {
@@ -97,7 +98,8 @@ const createAnnotation = () => {
 }
 
 const handleActivated = (annotation) => {
-  emit('update:selectedAnnotation', annotation);
+  emit('update:selectedAnnotation', annotation)
+  activeAnnotation.value = annotation // 更新当前选中的标注框
 }
 
 const handleHideDeleteButton = () => {
@@ -116,10 +118,29 @@ const handleImageClick = (event) => {
   }
 }
 
-// 监听键盘事件
+// 修改：处理键盘事件，支持上下左右键移动选中的标注框
 const handleKeyDown = (event) => {
-  if (event.key === 'a') {
-    createAnnotationAtPosition(lastClickPosition.value)
+  event.preventDefault()
+  event.stopPropagation()
+  if (activeAnnotation.value) {
+    const step = 1 // 移动步长
+    switch (event.key) {
+      case 'ArrowUp':
+        activeAnnotation.value.y = Math.max(0, activeAnnotation.value.y - step)
+        break
+      case 'ArrowDown':
+        activeAnnotation.value.y += step
+        break
+      case 'ArrowLeft':
+        activeAnnotation.value.x = Math.max(0, activeAnnotation.value.x - step)
+        break
+      case 'ArrowRight':
+        activeAnnotation.value.x += step
+        break
+      default:
+        return
+    }
+    emit('annotations-update', props.annotations) // 更新标注框位置
   }
 }
 
@@ -187,7 +208,7 @@ onUnmounted(() => {
             @dragging="(x, y) => Object.assign(annotation, { x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0) })"
             @resizing="(x, y, width, height) => Object.assign(annotation, { x: parseFloat(x / scale).toFixed(0), y: parseFloat(y / scale).toFixed(0), width: parseFloat(width / scale).toFixed(0), height: parseFloat(height / scale).toFixed(0) })"
             @activated="() => handleActivated(annotation)" 
-            @deactivated="() => activeAnnotationIndex = null"
+            @deactivated="() => activeAnnotation = null"
             @dragstop="() => emit('annotations-update', annotations)"
             @resizestop="() => emit('annotations-update', annotations)" 
             :style="{
