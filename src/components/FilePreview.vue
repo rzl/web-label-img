@@ -214,8 +214,8 @@ const handleKeyUp = (event) => {
 
 // 在指定位置创建标注框
 const createAnnotationAtPosition = (position) => {
-  let x = Number(position.x) - 50
-  let y = Number(position.y) - 50
+  let x = Number(position.x) / scale.value - (50 )
+  let y = Number(position.y) / scale.value - (50 )
   if (x < 0) x = 0
   if (y < 0) y = 0
   const newAnnotation = {
@@ -231,20 +231,18 @@ const createAnnotationAtPosition = (position) => {
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown)
-  window.addEventListener('keyup', handleKeyUp) // 添加 keyup 事件监听
+
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown)
-  window.removeEventListener('keyup', handleKeyUp) // 移除 keyup 事件监听
+
 })
 
 </script>
 
 <template>
-  <div style="height: 100%; width: 100%; position: relative;">
-    <div v-if="isImage" class="image-preview">
+  <div style="height: 100%; width: 100%; position: relative;" @keydown="handleKeyDown" @keyup="handleKeyUp" tabindex="0">
+    <div v-if="isImage" class="image-preview" ref="imagePreview">
       <div class="annotation-controls">
         <div class="annotation-controls left">
           <button @click="createAnnotation">增加标注</button>

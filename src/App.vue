@@ -41,6 +41,7 @@ async function buildFileTree(dirHandle, path = '') {
       entries.push({
         name: entry.name,
         handle: entry,
+        dirHandle: dirHandle,
         path: fullPath, // 增加 path 属性
         kind: entry.kind
       });
@@ -120,7 +121,8 @@ async function handleFileClick(node) {
       // 读取同名文件后缀为 .json 的文件内容
       const jsonFileName = `${file.name}.json`;
       console.log('jsonFileName:', jsonFileName); // 调试输出
-      const jsonFileHandle = await currentDirHandle.getFileHandle(jsonFileName, { create: false }).catch(() => null);
+      const dirHandle = node.dirHandle || currentDirHandle; // 使用 node.dirHandle 或 currentDirHandle
+      const jsonFileHandle = await dirHandle.getFileHandle(jsonFileName, { create: false }).catch(() => null);
       if (jsonFileHandle) {
         const jsonFile = await jsonFileHandle.getFile();
         const jsonContent = await jsonFile.text();
